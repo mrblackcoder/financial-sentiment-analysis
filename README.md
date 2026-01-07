@@ -1,83 +1,37 @@
-# Financial Sentiment Analysis - ML & Deep Learning Project
+# Financial Sentiment Analysis
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+ML & Deep Learning ile finansal haber duygu analizi projesi.
 
-Financial news sentiment classification using Machine Learning and Deep Learning approaches. Achieves **96.18% F1-Score** on 753 test samples.
+## 🚀 Hızlı Başlangıç
 
-## 📊 Project Overview
-
-This project implements **automated sentiment analysis** for financial news articles, classifying them into:
-- **Positive** (bullish sentiment)
-- **Negative** (bearish sentiment)  
-- **Neutral** (no clear direction)
-
-### Key Features
-- ✅ **3,761 samples** (451 real RSS news + templates + augmentation)
-- ✅ **753 test samples** (exceeds 500 requirement)
-- ✅ **4 models**: 3 Traditional ML + 1 Deep Learning
-- ✅ **4 feature methods**: TF-IDF, BoW, Word2Vec, Custom
-- ✅ **5-fold cross-validation** with regularization
-- ✅ **Modular architecture** for reproducibility
-
-## 🎯 Results
-
-| Model | CV F1-Score | Test F1-Score | Training Time |
-|-------|-------------|---------------|---------------|
-| **Linear SVM** | 0.96 ± 0.002 | **96.18%** | 0.32s |
-| MLP (Deep Learning) | 0.96 ± 0.007 | 95.54% | 3.44s |
-| Logistic Regression | 0.93 ± 0.008 | 93.84% | 1.60s |
-| Random Forest | 0.91 ± 0.012 | 91.15% | 0.10s |
-
-**Best Model**: Linear SVM with TF-IDF features - only 28 errors out of 753 test samples!
-
-## 🚀 Quick Start
-
-### Prerequisites
+### Kurulum
 ```bash
-Python 3.8+
-pip (Python package manager)
-```
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/YOUR_USERNAME/financial-sentiment-analysis.git
+# Projeyi indir
+git clone https://github.com/KULLANICI_ADI/financial-sentiment-analysis.git
 cd financial-sentiment-analysis
-```
 
-2. **Install dependencies**
-```bash
+# Sanal ortam oluştur
+python3 -m venv venv
+source venv/bin/activate
+
+# Kütüphaneleri yükle
 pip install -r requirements.txt
+
+# Projeyi oluştur (2-3 dakika)
+python3 reset_and_rebuild.py --yes
+
+# Görselleri aç
+open figures/
 ```
 
-3. **Download required NLTK data** (if not already installed)
-```python
-python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet')"
-```
+## 📊 Proje Özeti
 
-### Usage
+- **Dataset:** 3,761 finansal haber (451 gerçek RSS + template + augmentation)
+- **Test:** 753 sample (%20)
+- **En İyi Model:** Linear SVM - %96.18 F1-Score
+- **Modeller:** Logistic Regression, Linear SVM, Random Forest, MLP
 
-**Option 1: Run the complete pipeline** (Recommended for first-time users)
-```bash
-# This will create dataset, train models, and generate visualizations
-python create_full_dataset.py
-python train_and_evaluate.py
-```
-
-**Option 2: Reset and rebuild everything**
-```bash
-# Clean all previous data and start fresh
-python reset_and_rebuild.py --yes
-```
-
-**Option 3: Interactive Jupyter Notebook**
-```bash
-jupyter notebook demo_notebook.ipynb
-```
-
-## 📁 Project Structure
+## 📁 Proje Yapısı
 ```
 financial-sentiment-analysis/
 ├── README.md
