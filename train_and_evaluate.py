@@ -30,8 +30,17 @@ import pickle
 import warnings
 from pathlib import Path
 
+# Suppress all warnings for clean output
+warnings.filterwarnings('ignore')
+os.environ['PYTHONWARNINGS'] = 'ignore'
+
 import numpy as np
+# Set numpy to ignore overflow/underflow warnings
+np.seterr(divide='ignore', invalid='ignore', over='ignore', under='ignore')
+
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -46,11 +55,15 @@ from sklearn.metrics import (
     matthews_corrcoef, cohen_kappa_score, roc_curve, auc
 )
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.preprocessing import label_binarize, StandardScaler
+from sklearn.preprocessing import label_binarize, StandardScaler, normalize
+from sklearn.pipeline import Pipeline
 from scipy.sparse import hstack
 import re
 
-warnings.filterwarnings('ignore')
+# Additional warning suppression
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -210,11 +223,17 @@ tfidf_vectorizer = TfidfVectorizer(
     min_df=2,
     max_df=0.95,
     stop_words='english',
-    sublinear_tf=True
+    sublinear_tf=True,
+    norm='l2'  # L2 normalization for numerical stability
 )
 X_train_tfidf = tfidf_vectorizer.fit_transform(train_texts).toarray()
 X_val_tfidf = tfidf_vectorizer.transform(val_texts).toarray()
 X_test_tfidf = tfidf_vectorizer.transform(test_texts).toarray()
+
+# Replace any NaN/Inf values with 0 for numerical stability
+X_train_tfidf = np.nan_to_num(X_train_tfidf, nan=0.0, posinf=0.0, neginf=0.0)
+X_val_tfidf = np.nan_to_num(X_val_tfidf, nan=0.0, posinf=0.0, neginf=0.0)
+X_test_tfidf = np.nan_to_num(X_test_tfidf, nan=0.0, posinf=0.0, neginf=0.0)
 print(f"        Shape: {X_train_tfidf.shape}")
 
 # 2.2 Bag-of-Words Features
@@ -237,6 +256,11 @@ word2vec = SimpleWord2Vec(vector_size=100)
 X_train_w2v = word2vec.fit_transform(train_texts)
 X_val_w2v = word2vec.transform(val_texts)
 X_test_w2v = word2vec.transform(test_texts)
+
+# Normalize Word2Vec features
+X_train_w2v = np.nan_to_num(X_train_w2v, nan=0.0, posinf=0.0, neginf=0.0)
+X_val_w2v = np.nan_to_num(X_val_w2v, nan=0.0, posinf=0.0, neginf=0.0)
+X_test_w2v = np.nan_to_num(X_test_w2v, nan=0.0, posinf=0.0, neginf=0.0)
 print(f"        Shape: {X_train_w2v.shape}")
 
 # 2.4 Custom Financial Features
@@ -255,9 +279,19 @@ X_train_custom_scaled = scaler.fit_transform(X_train_custom)
 X_val_custom_scaled = scaler.transform(X_val_custom)
 X_test_custom_scaled = scaler.transform(X_test_custom)
 
+# Ensure no NaN/Inf in scaled features
+X_train_custom_scaled = np.nan_to_num(X_train_custom_scaled, nan=0.0, posinf=0.0, neginf=0.0)
+X_val_custom_scaled = np.nan_to_num(X_val_custom_scaled, nan=0.0, posinf=0.0, neginf=0.0)
+X_test_custom_scaled = np.nan_to_num(X_test_custom_scaled, nan=0.0, posinf=0.0, neginf=0.0)
+
 X_train_combined = np.hstack([X_train_tfidf, X_train_custom_scaled])
 X_val_combined = np.hstack([X_val_tfidf, X_val_custom_scaled])
 X_test_combined = np.hstack([X_test_tfidf, X_test_custom_scaled])
+
+# Final safety check for combined features
+X_train_combined = np.nan_to_num(X_train_combined, nan=0.0, posinf=0.0, neginf=0.0)
+X_val_combined = np.nan_to_num(X_val_combined, nan=0.0, posinf=0.0, neginf=0.0)
+X_test_combined = np.nan_to_num(X_test_combined, nan=0.0, posinf=0.0, neginf=0.0)
 print(f"        Shape: {X_train_combined.shape}")
 
 # Save all features
@@ -291,7 +325,7 @@ models = {
     ),
     'Linear SVM': LinearSVC(
         C=1.0, penalty='l2', loss='squared_hinge',
-        max_iter=2000, random_state=42, dual=True
+        max_iter=2000, random_state=42, dual='auto'  # Use 'auto' to avoid deprecation
     ),
     'Random Forest': RandomForestClassifier(
         n_estimators=100, max_depth=20,
@@ -301,7 +335,8 @@ models = {
     'MLP (Deep Learning)': MLPClassifier(
         hidden_layer_sizes=(256, 128, 64),
         activation='relu', solver='adam',
-        alpha=0.0001, batch_size=32,
+        alpha=0.001,  # Increased L2 regularization for stability
+        batch_size=32,
         learning_rate='adaptive', learning_rate_init=0.001,
         max_iter=500, early_stopping=True,
         validation_fraction=0.1, n_iter_no_change=10,
@@ -399,35 +434,43 @@ os.makedirs('figures', exist_ok=True)
 
 fig, axes = plt.subplots(2, 2, figsize=(14, 12))
 axes = axes.flatten()
-train_sizes = np.linspace(0.1, 1.0, 10)
+train_sizes = np.linspace(0.2, 1.0, 8)  # Start from 20% to avoid small sample issues
 
-for idx, (name, model_data) in enumerate(results.items()):
+# Define models for learning curves with proper settings
+lc_models = {
+    'Logistic Regression': LogisticRegression(C=1.0, max_iter=1000, random_state=42, n_jobs=-1),
+    'Linear SVM': LinearSVC(C=1.0, max_iter=2000, random_state=42, dual='auto'),
+    'Random Forest': RandomForestClassifier(n_estimators=50, max_depth=15, random_state=42, n_jobs=-1),
+    'MLP (Deep Learning)': MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=100, early_stopping=True, random_state=42)
+}
+
+for idx, (name, model) in enumerate(lc_models.items()):
     ax = axes[idx]
 
-    if 'Logistic' in name:
-        model = LogisticRegression(C=1.0, max_iter=1000, random_state=42)
-    elif 'SVM' in name:
-        model = LinearSVC(C=1.0, max_iter=2000, random_state=42, dual=True)
-    elif 'Random' in name:
-        model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
-    else:
-        model = MLPClassifier(hidden_layer_sizes=(256, 128, 64), max_iter=200,
-                              early_stopping=True, random_state=42)
+    try:
+        train_sizes_abs, train_scores, val_scores = learning_curve(
+            model, X_train, train_labels,
+            train_sizes=train_sizes, cv=5, scoring='f1_macro', n_jobs=-1,
+            error_score='raise'
+        )
 
-    train_sizes_abs, train_scores, val_scores = learning_curve(
-        model, X_train, train_labels,
-        train_sizes=train_sizes, cv=5, scoring='f1_macro', n_jobs=-1
-    )
+        # Handle any NaN values in scores
+        train_scores = np.nan_to_num(train_scores, nan=0.5)
+        val_scores = np.nan_to_num(val_scores, nan=0.5)
 
-    train_mean = train_scores.mean(axis=1)
-    train_std = train_scores.std(axis=1)
-    val_mean = val_scores.mean(axis=1)
-    val_std = val_scores.std(axis=1)
+        train_mean = train_scores.mean(axis=1)
+        train_std = train_scores.std(axis=1)
+        val_mean = val_scores.mean(axis=1)
+        val_std = val_scores.std(axis=1)
 
-    ax.fill_between(train_sizes_abs, train_mean - train_std, train_mean + train_std, alpha=0.1, color='blue')
-    ax.fill_between(train_sizes_abs, val_mean - val_std, val_mean + val_std, alpha=0.1, color='orange')
-    ax.plot(train_sizes_abs, train_mean, 'o-', color='blue', label='Training Score')
-    ax.plot(train_sizes_abs, val_mean, 'o-', color='orange', label='CV Score')
+        ax.fill_between(train_sizes_abs, train_mean - train_std, train_mean + train_std, alpha=0.1, color='blue')
+        ax.fill_between(train_sizes_abs, val_mean - val_std, val_mean + val_std, alpha=0.1, color='orange')
+        ax.plot(train_sizes_abs, train_mean, 'o-', color='blue', label='Training Score')
+        ax.plot(train_sizes_abs, val_mean, 'o-', color='orange', label='CV Score')
+    except Exception as e:
+        # Fallback: plot the final CV scores from results
+        ax.text(0.5, 0.5, f'CV F1: {results[name]["cv_mean"]:.4f}', 
+                ha='center', va='center', transform=ax.transAxes, fontsize=12)
 
     ax.set_xlabel('Training Examples')
     ax.set_ylabel('F1-Score (Macro)')

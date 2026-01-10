@@ -66,7 +66,6 @@ class TextAugmenter:
 
         if len(words) < 2:
             return text
-
         new_words = words.copy()
 
         for _ in range(n):

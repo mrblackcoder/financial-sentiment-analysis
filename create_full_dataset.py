@@ -1,6 +1,5 @@
 """Create full dataset meeting project requirements (2000+ samples)
 
-UPDATED VERSION - Uses REAL scraped data + proper labeling
 
 This script:
 1. Loads REAL scraped financial news from RSS feeds

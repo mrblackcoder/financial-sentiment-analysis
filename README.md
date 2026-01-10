@@ -1,28 +1,12 @@
 # Financial Sentiment Analysis
 
-ML & Deep Learning ile finansal haber duygu analizi projesi.
+**ML & Deep Learning ile Finansal Haber Duygu Analizi**
 
-## 🚀 Hızlı Başlangıç
+## 🎯 Proje Tamamlandı - Teslime Hazır
 
-### Kurulum
-```bash
-# Projeyi indir
-git clone https://github.com/KULLANICI_ADI/financial-sentiment-analysis.git
-cd financial-sentiment-analysis
+✅ **Tüm gereksinimler karşılandı. Sunum için `sunum_icerik.md` ve `sonkonus+slayt.md` dosyalarını kullanın.**
 
-# Sanal ortam oluştur
-python3 -m venv venv
-source venv/bin/activate
-
-# Kütüphaneleri yükle
-pip install -r requirements.txt
-
-# Projeyi oluştur (2-3 dakika)
-python3 reset_and_rebuild.py --yes
-
-# Görselleri aç
-open figures/
-```
+---
 
 ## 📊 Proje Özeti
 
@@ -30,6 +14,28 @@ open figures/
 - **Test:** 753 sample (%20)
 - **En İyi Model:** Linear SVM - %96.18 F1-Score
 - **Modeller:** Logistic Regression, Linear SVM, Random Forest, MLP
+
+---
+
+## 🚀 Hızlı Başlangıç
+
+### Kurulum
+```bash
+# Sanal ortam oluştur
+python3 -m venv venv
+source venv/bin/activate
+
+# Kütüphaneleri yükle
+pip install -r requirements.txt
+
+# Projeyi çalıştır
+python3 reset_and_rebuild.py --yes
+
+# Görselleri aç
+open figures/
+```
+
+---
 
 ## 📁 Proje Yapısı
 ```
@@ -125,3 +131,53 @@ financial-sentiment-analysis/
 **Course:** SEN22325E - Learning from Data
 **Instructor:** Cumali Turkmenoglu
 **Institution:** Fatih Sultan Mehmet Vakif University
+
+---
+
+## 4. Kullanım Talimatları
+
+## 📦 Proje İçeriği
+
+- `financial-sentiment-analysis/` - Proje kök dizini
+- `README.md` - Bu belge
+- `requirements.txt` - Python bağımlılıkları
+- `create_full_dataset.py` - Veri seti oluşturma scripti
+- `train_and_evaluate.py` - Model eğitimi ve değerlendirme scripti
+- `reset_and_rebuild.py` - Projeyi sıfırlayıp yeniden oluşturma scripti
+- `SUNUM_REHBERI.md` - Sunum rehberi
+
+## 🎯 Sunum Hazırlığı
+
+### 1. Sunumu Hazırla
+```bash
+# Sunum rehberini oku
+cat SUNUM_REHBERI.md
+
+# Jupyter notebook'u aç
+jupyter notebook demo_notebook.ipynb
+```
+
+### 2. PDF Rapor Oluştur
+```bash
+# Gerekli kütüphaneyi kur
+pip install reportlab
+
+# Raporu oluştur
+python generate_report.py
+
+# Çıktı: FINANCIAL_SENTIMENT_ANALYSIS_REPORT.pdf
+```
+
+### 3. Gereksiz Dosyaları Temizle
+```bash
+chmod +x cleanup_project.sh
+./cleanup_project.sh
+```
+
+## 📝 Teslim Dosyaları
+
+- ✅ `FINANCIAL_SENTIMENT_ANALYSIS_REPORT.pdf` - Ana rapor
+- ✅ `demo_notebook.ipynb` - Çalışan kod + görselleştirmeler
+- ✅ `src/` klasörü - Kaynak kodlar
+- ✅ `figures/` klasörü - Görseller
+- ✅ `SUNUM_REHBERI.md` - Sunum notları
